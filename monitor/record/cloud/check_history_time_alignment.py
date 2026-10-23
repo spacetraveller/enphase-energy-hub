@@ -1,4 +1,3 @@
-import os
 import sys
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
@@ -7,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 from influxdb_client import InfluxDBClient
 
-from cloud_common import cloud_get, compact, env_required, redact, write_json_snapshot
+from cloud_common import cloud_get, compact, env_required, local_history_timezone, redact, write_json_snapshot
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 from record.query_helpers import (  # noqa: E402
@@ -86,7 +85,7 @@ def render_epoch(value: int, local_tz: ZoneInfo) -> dict[str, str]:
 def main() -> None:
     system_id = env_required("ENPHASE_CLOUD_SYSTEM_ID")
     bucket = influx_bucket()
-    local_tz = ZoneInfo(os.getenv("ENPHASE_HISTORY_TIMEZONE", "UTC"))
+    local_tz = local_history_timezone()
     client = influx_client()
 
     try:

@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-from cloud_common import cloud_get, env_int, env_required, require_cloud_success, write_json_snapshot
+from cloud_common import cloud_get, env_int, env_required, local_history_timezone, require_cloud_success, write_json_snapshot
 
 
 MEASUREMENT = "enphase_ev_charger_telemetry"
@@ -39,12 +39,15 @@ def fetch_day(system_id: str, serial: str, local_day: date, local_tz: ZoneInfo) 
 
     points: list[Point] = []
     total_wh = 0.0
+    available_through = datetime.now(timezone.utc)
     for interval in intervals:
         if not isinstance(interval, dict):
             continue
         end_at = interval.get("end_at")
         value = interval.get("consumption")
         if not isinstance(end_at, int) or not isinstance(value, (int, float)):
+            continue
+        if datetime.fromtimestamp(end_at, tz=timezone.utc) > available_through:
             continue
         timestamp = datetime.fromtimestamp(end_at - INTERVAL_SECONDS, tz=timezone.utc)
         if timestamp.astimezone(local_tz).date() != local_day:
@@ -86,7 +89,7 @@ def main() -> None:
     system_id = env_required("ENPHASE_CLOUD_SYSTEM_ID")
     serials = [serial.strip() for serial in env_required("ENPHASE_CLOUD_EVSE_SERIALS").split(",") if serial.strip()]
     serial = os.getenv("ENPHASE_CLOUD_EVSE_SERIAL", serials[0])
-    local_tz = ZoneInfo(os.getenv("ENPHASE_HISTORY_TIMEZONE", "UTC"))
+    local_tz = local_history_timezone()
     start_day = date.fromisoformat(args.start_date)
     end_day = date.fromisoformat(args.end_date)
     delay_seconds = max(0, env_int("ENPHASE_CLOUD_REQUEST_DELAY_SECONDS", 7))

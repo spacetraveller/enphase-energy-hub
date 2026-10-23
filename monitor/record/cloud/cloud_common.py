@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -48,6 +49,15 @@ def env_float(name: str, default: float) -> float:
         return float(raw)
     except ValueError:
         return default
+
+
+def local_history_timezone() -> ZoneInfo:
+    """Use the configured local timezone for cloud history and EV day ranges."""
+    for name in ("ENPHASE_HISTORY_TIMEZONE", "HISTORY_TIMEZONE", "WEATHER_TIMEZONE"):
+        value = os.getenv(name)
+        if value:
+            return ZoneInfo(value)
+    return ZoneInfo("UTC")
 
 
 def api_base() -> str:

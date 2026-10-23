@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-from cloud_common import cloud_get, env_int, env_required, require_cloud_success, write_json_snapshot
+from cloud_common import cloud_get, env_int, env_required, local_history_timezone, require_cloud_success, write_json_snapshot
 
 
 HISTORY_MEASUREMENT = "enphase_history_15m"
@@ -215,7 +215,7 @@ def main() -> None:
     system_id = env_required("ENPHASE_CLOUD_SYSTEM_ID")
     bucket = os.environ["INFLUXDB_BUCKET"]
     org = os.environ["INFLUXDB_ORG"]
-    local_tz = ZoneInfo(os.getenv("ENPHASE_HISTORY_TIMEZONE", "UTC"))
+    local_tz = local_history_timezone()
     now = datetime.now(local_tz)
     yesterday = now.date() - timedelta(days=1)
     client = InfluxDBClient(

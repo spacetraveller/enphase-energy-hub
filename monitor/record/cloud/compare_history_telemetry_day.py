@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from influxdb_client import InfluxDBClient
 
-from cloud_common import cloud_get, compact, env_required, redact, write_json_snapshot
+from cloud_common import cloud_get, compact, env_required, local_history_timezone, redact, write_json_snapshot
 
 
 HISTORY_MEASUREMENT = "enphase_history_15m"
@@ -136,7 +136,7 @@ def fetch_cloud_telemetry(system_id: str, local_day: date, local_tz: ZoneInfo) -
 def main() -> None:
     system_id = env_required("ENPHASE_CLOUD_SYSTEM_ID")
     bucket = os.environ["INFLUXDB_BUCKET"]
-    local_tz = ZoneInfo(os.getenv("ENPHASE_HISTORY_TIMEZONE", "UTC"))
+    local_tz = local_history_timezone()
     client = InfluxDBClient(
         url=os.environ["INFLUXDB_URL"],
         token=os.environ["INFLUXDB_TOKEN"],

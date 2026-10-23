@@ -176,6 +176,11 @@ days. Batch importers stop immediately on any non-success response. In
 particular, a `401` stops the date loop after the first failed request so an
 expired token cannot consume the remaining request budget.
 
+Cloud history and EV imports use `HISTORY_TIMEZONE`, which defaults to
+`WEATHER_TIMEZONE` in Docker Compose. Set a local timezone so date ranges match
+your calendar days. An EV import for today writes only completed
+15-minute intervals; import that day again after it ends to capture the rest.
+
 If the cloud API returns `401`, refresh the OAuth tokens in the root `.env`,
 then run the import normally:
 
