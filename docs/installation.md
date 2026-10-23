@@ -50,6 +50,27 @@ Open [http://localhost:3000](http://localhost:3000) on the host computer and sig
 
 Grafana and InfluxDB usernames, passwords, and the InfluxDB token initialize accounts and access when their persistent data volumes are first created. Changing `.env` later does not reset credentials in an existing volume. Use each service's credential management to rotate them, or intentionally recreate its data volume only after understanding that this deletes stored data. Grafana's password can be changed in its user settings.
 
+## Update Grafana and InfluxDB
+
+Compose uses `grafana/grafana:latest` and `influxdb:2`, with `pull_policy: always`.
+Starting these services with Compose checks for newer images. Grafana follows the
+latest stable release, including future major versions; InfluxDB stays on 2.x
+because the project's queries use Flux. Running containers do not update themselves.
+
+Before upgrading, review the release notes and back up the persistent data volumes.
+Stop Grafana before copying its SQLite database. Keep local backups under the
+ignored `backups/` folder; they contain private data and credentials. Database
+migrations can require restoring a backup to roll back an upgrade.
+
+From the project folder, apply available updates with:
+
+```powershell
+docker compose up -d --no-deps influxdb grafana
+```
+
+Grafana uses `GF_PLUGINS_PREINSTALL_SYNC` to install the D3 Gauge plugin before
+startup. Provisioned dashboards continue to use the existing file-based workflow.
+
 ## Identify your inverters
 
 Once the local Gateway token and host are configured, run the one-time discovery command from the project folder:

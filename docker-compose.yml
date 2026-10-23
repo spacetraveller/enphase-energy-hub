@@ -1,6 +1,7 @@
 services:
   influxdb:
-    image: influxdb:2.7
+    image: influxdb:2
+    pull_policy: always
     container_name: enphase-influxdb
     restart: unless-stopped
     ports:
@@ -22,7 +23,8 @@ services:
       retries: 12
 
   grafana:
-    image: grafana/grafana-oss:11.6.1
+    image: grafana/grafana:latest
+    pull_policy: always
     entrypoint: ["/bin/sh", "/etc/grafana/render-dashboards.sh"]
     container_name: enphase-grafana
     restart: unless-stopped
@@ -44,7 +46,7 @@ services:
       HISTORY_TIMEZONE: ${HISTORY_TIMEZONE:-${WEATHER_TIMEZONE:-UTC}}
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USERNAME:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
-      GF_INSTALL_PLUGINS: briangann-gauge-panel
+      GF_PLUGINS_PREINSTALL_SYNC: briangann-gauge-panel
       INFLUXDB_ORG: ${INFLUXDB_ORG:-home}
       INFLUXDB_BUCKET: ${INFLUXDB_BUCKET:-enphase}
       INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-change-me-token}
