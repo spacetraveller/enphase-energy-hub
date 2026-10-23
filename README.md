@@ -95,4 +95,8 @@ To map panels to inverters, optionally create a private solar layout using the [
 
 Before sharing a fork or project archive, inspect it for `.env` files, tokens, household records, raw energy exports, device serials, site identifiers, and personal roof maps or images. Git ignore rules help prevent new private files from being added, but do not remove data already tracked or committed. See [AGENTS.md](AGENTS.md) for privacy and safe-sharing guidance.
 
-We welcome feedback about what works, what is confusing, and what would make the app more useful. If you create a dashboard, report, or workflow that could help other Enphase owners, please share the idea.
+We welcome feedback about what works, what is confusing, and what would make the app more useful. Contributions to the code, documentation, features, and dashboard types are welcome too. If you create a dashboard, report, or workflow that could help other Enphase owners, please share the idea or open a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md) for a short guide.
+
+## License
+
+This project is available under the [MIT License](LICENSE).
