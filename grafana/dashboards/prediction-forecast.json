@@ -1,0 +1,1338 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "id": 20,
+      "title": "Your solar plan",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 3
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Solar, household energy and optional EV charging — the next three days**\n\nConfigured local time · Household scenarios depend on your setup"
+      }
+    },
+    {
+      "id": 21,
+      "title": "Forecast age",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 3
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "displayName": "Since last update",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 360,
+                "color": "orange"
+              },
+              {
+                "value": 720,
+                "color": "red"
+              }
+            ]
+          },
+          "noValue": "No forecast"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket:\"enphase\") |> range(start:v.timeRangeStart, stop:v.timeRangeStop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_daily\" and r.model==\"weather_adjusted\" and (r._field==\"fetched_at_unix\" and r.metric==\"Produced\"))\n |> group() |> min()\n |> map(fn:(r)=>({_value:(float(v:uint(v:now()))/1000000000.0-float(v:r._value))/60.0,_field:\"Since forecast update\"}))"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Solar generation",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#EAB839"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "orientation": "vertical",
+        "justifyMode": "center",
+        "text": {
+          "valueSize": 42,
+          "titleSize": 16
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\nstart=date.add(d:0d,to:date.truncate(t:v.timeRangeStart,unit:1d))\nstop=date.add(d:1d,to:start)\nw=date.weekDay(t:start)\nname=if w==0 then \"Sun\" else if w==1 then \"Mon\" else if w==2 then \"Tue\" else if w==3 then \"Wed\" else if w==4 then \"Thu\" else if w==5 then \"Fri\" else \"Sat\"\nfrom(bucket:\"enphase\") |> range(start:start,stop:stop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_daily\" and r.model==\"weather_adjusted\")\n |> filter(fn:(r)=>r.metric==\"Produced\" and r._field==\"likely_kwh\")\n |> map(fn:(r)=>({_value:r._value,_field:name+\" · \"+r.target_date})) |> group()"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "title": "Daily energy · kWh",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Item"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 215
+              },
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": false,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\nstart=date.add(d:0d,to:date.truncate(t:v.timeRangeStart,unit:1d))\nstop=date.add(d:1d,to:start)\nfrom(bucket:\"enphase\") |> range(start:start,stop:stop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_daily\" and r.model==\"weather_adjusted\")\n |> filter(fn:(r)=>r._field==\"likely_kwh\" or (r.metric==\"Produced\" and (r._field==\"low_kwh\" or r._field==\"high_kwh\")))\n |> map(fn:(r)=>({Item:if r._field==\"low_kwh\" then \"Solar · lower estimate\" else if r._field==\"high_kwh\" then \"Solar · upper estimate\" else if r.metric==\"Consumed\" then \"Household\" else if r.metric==\"Imported\" then \"Buy from grid\" else if r.metric==\"Exported\" then \"Send to grid\" else \"Solar\",Energy:r._value,order:if r._field==\"low_kwh\" then 4 else if r._field==\"high_kwh\" then 5 else if r.metric==\"Consumed\" then 1 else if r.metric==\"Imported\" then 2 else if r.metric==\"Exported\" then 3 else 0}))\n |> filter(fn:(r)=>r.order>0) |> group() |> sort(columns:[\"order\"]) |> keep(columns:[\"Item\",\"Energy\"])"
+        }
+      ],
+      "description": "Solar ranges are provisional p20–p80 estimates, not guaranteed bounds. Household consumption includes an EV scenario when enabled and supported.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Item": 0,
+              "Energy": 1
+            },
+            "excludeByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Solar generation",
+      "type": "stat",
+      "gridPos": {
+        "x": 8,
+        "y": 3,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#EAB839"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "orientation": "vertical",
+        "justifyMode": "center",
+        "text": {
+          "valueSize": 42,
+          "titleSize": 16
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\nstart=date.add(d:1d,to:date.truncate(t:v.timeRangeStart,unit:1d))\nstop=date.add(d:1d,to:start)\nw=date.weekDay(t:start)\nname=if w==0 then \"Sun\" else if w==1 then \"Mon\" else if w==2 then \"Tue\" else if w==3 then \"Wed\" else if w==4 then \"Thu\" else if w==5 then \"Fri\" else \"Sat\"\nfrom(bucket:\"enphase\") |> range(start:start,stop:stop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_daily\" and r.model==\"weather_adjusted\")\n |> filter(fn:(r)=>r.metric==\"Produced\" and r._field==\"likely_kwh\")\n |> map(fn:(r)=>({_value:r._value,_field:name+\" · \"+r.target_date})) |> group()"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "title": "Daily energy · kWh",
+      "type": "table",
+      "gridPos": {
+        "x": 8,
+        "y": 7,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Item"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 215
+              },
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": false,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\nstart=date.add(d:1d,to:date.truncate(t:v.timeRangeStart,unit:1d))\nstop=date.add(d:1d,to:start)\nfrom(bucket:\"enphase\") |> range(start:start,stop:stop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_daily\" and r.model==\"weather_adjusted\")\n |> filter(fn:(r)=>r._field==\"likely_kwh\" or (r.metric==\"Produced\" and (r._field==\"low_kwh\" or r._field==\"high_kwh\")))\n |> map(fn:(r)=>({Item:if r._field==\"low_kwh\" then \"Solar · lower estimate\" else if r._field==\"high_kwh\" then \"Solar · upper estimate\" else if r.metric==\"Consumed\" then \"Household\" else if r.metric==\"Imported\" then \"Buy from grid\" else if r.metric==\"Exported\" then \"Send to grid\" else \"Solar\",Energy:r._value,order:if r._field==\"low_kwh\" then 4 else if r._field==\"high_kwh\" then 5 else if r.metric==\"Consumed\" then 1 else if r.metric==\"Imported\" then 2 else if r.metric==\"Exported\" then 3 else 0}))\n |> filter(fn:(r)=>r.order>0) |> group() |> sort(columns:[\"order\"]) |> keep(columns:[\"Item\",\"Energy\"])"
+        }
+      ],
+      "description": "Solar ranges are provisional p20–p80 estimates, not guaranteed bounds. Household consumption includes an EV scenario when enabled and supported.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Item": 0,
+              "Energy": 1
+            },
+            "excludeByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "title": "Solar generation",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 3,
+        "w": 8,
+        "h": 4
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#EAB839"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "orientation": "vertical",
+        "justifyMode": "center",
+        "text": {
+          "valueSize": 42,
+          "titleSize": 16
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\nstart=date.add(d:2d,to:date.truncate(t:v.timeRangeStart,unit:1d))\nstop=date.add(d:1d,to:start)\nw=date.weekDay(t:start)\nname=if w==0 then \"Sun\" else if w==1 then \"Mon\" else if w==2 then \"Tue\" else if w==3 then \"Wed\" else if w==4 then \"Thu\" else if w==5 then \"Fri\" else \"Sat\"\nfrom(bucket:\"enphase\") |> range(start:start,stop:stop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_daily\" and r.model==\"weather_adjusted\")\n |> filter(fn:(r)=>r.metric==\"Produced\" and r._field==\"likely_kwh\")\n |> map(fn:(r)=>({_value:r._value,_field:name+\" · \"+r.target_date})) |> group()"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "title": "Daily energy · kWh",
+      "type": "table",
+      "gridPos": {
+        "x": 16,
+        "y": 7,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Item"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 215
+              },
+              {
+                "id": "unit",
+                "value": "string"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": false,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\nstart=date.add(d:2d,to:date.truncate(t:v.timeRangeStart,unit:1d))\nstop=date.add(d:1d,to:start)\nfrom(bucket:\"enphase\") |> range(start:start,stop:stop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_daily\" and r.model==\"weather_adjusted\")\n |> filter(fn:(r)=>r._field==\"likely_kwh\" or (r.metric==\"Produced\" and (r._field==\"low_kwh\" or r._field==\"high_kwh\")))\n |> map(fn:(r)=>({Item:if r._field==\"low_kwh\" then \"Solar · lower estimate\" else if r._field==\"high_kwh\" then \"Solar · upper estimate\" else if r.metric==\"Consumed\" then \"Household\" else if r.metric==\"Imported\" then \"Buy from grid\" else if r.metric==\"Exported\" then \"Send to grid\" else \"Solar\",Energy:r._value,order:if r._field==\"low_kwh\" then 4 else if r._field==\"high_kwh\" then 5 else if r.metric==\"Consumed\" then 1 else if r.metric==\"Imported\" then 2 else if r.metric==\"Exported\" then 3 else 0}))\n |> filter(fn:(r)=>r.order>0) |> group() |> sort(columns:[\"order\"]) |> keep(columns:[\"Item\",\"Energy\"])"
+        }
+      ],
+      "description": "Solar ranges are provisional p20–p80 estimates, not guaranteed bounds. Household consumption includes an EV scenario when enabled and supported.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Item": 0,
+              "Energy": 1
+            },
+            "excludeByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "unit": "kwatt"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Solar"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#EAB839"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Household"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#5794F2"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 16,
+        "h": 9
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket:\"enphase\") |> range(start:v.timeRangeStart, stop:v.timeRangeStop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_hourly\" and r.model==\"weather_adjusted\" and (r._field==\"kwh\" and (r.metric==\"Produced\" or r.metric==\"Consumed\")))\n |> map(fn:(r)=>({_time:r._time,_value:r._value,_field:if r.metric==\"Produced\" then \"Solar\" else \"Household\"})) |> group(columns:[\"_field\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Solar and household demand",
+      "type": "timeseries",
+      "description": "Hourly average power in kW; household includes expected EV demand."
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "unit": "kwatt"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Buy from grid"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#B877D9"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Send to grid"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#2EBFA5"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 13,
+        "w": 8,
+        "h": 9
+      },
+      "id": 29,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket:\"enphase\") |> range(start:v.timeRangeStart, stop:v.timeRangeStop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_hourly\" and r.model==\"weather_adjusted\" and (r._field==\"kwh\" and (r.metric==\"Imported\" or r.metric==\"Exported\")))\n |> map(fn:(r)=>({_time:r._time,_value:r._value,_field:if r.metric==\"Imported\" then \"Buy from grid\" else \"Send to grid\"})) |> group(columns:[\"_field\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Buying and selling energy",
+      "type": "timeseries",
+      "description": "Hourly average grid power. Expected buy and sell may both be positive because different plausible household loads are averaged."
+    },
+    {
+      "id": 30,
+      "title": "When could an EV charge on solar?",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 5
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 85,
+            "spanNulls": false
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Insufficient surplus",
+                  "color": "#73808A",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Marginal",
+                  "color": "#EAB839",
+                  "index": 2
+                },
+                "2": {
+                  "text": "Favourable",
+                  "color": "#2EBFA5",
+                  "index": 3
+                },
+                "-1": {
+                  "text": "Unavailable",
+                  "color": "#555555",
+                  "index": 0
+                }
+              }
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Usual hot water"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "",
+                        "color": "#30383F",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "~10:30–11:30",
+                        "color": "#EAB839",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.8,
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\nfrom(bucket:\"enphase\") |> range(start:v.timeRangeStart, stop:v.timeRangeStop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_hourly\" and r.model==\"weather_adjusted\" and (r.metric==\"Consumed\" and (r._field==\"green_charge_status\" or r._field==\"minimum_ev_surplus_kw\" or r._field==\"weather_issued_unix\" or r._field==\"ev_planning_available\")))\n |> keep(columns:[\"_time\",\"_field\",\"_value\"]) |> group() |> pivot(rowKey:[\"_time\"],columnKey:[\"_field\"],valueColumn:\"_value\")\n |> map(fn:(r)=>({r with status:if r.ev_planning_available<1.0 or float(v:uint(v:now()))/1000000000.0-r.weather_issued_unix>21600.0 then -1.0 else r.green_charge_status}))\n |> map(fn:(r)=>({_time:r._time,_value:r.status,_field:\"Charging opportunity\"})) |> group(columns:[\"_field\"]) |> sort(columns:[\"_time\"])"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\nfrom(bucket:\"enphase\") |> range(start:v.timeRangeStart, stop:v.timeRangeStop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_hourly\" and r.model==\"weather_adjusted\" and (r.metric==\"Produced\" and r._field==\"kwh\"))\n |> map(fn:(r)=>({_time:if date.hour(t:r._time)==10 or date.hour(t:r._time)==11 then date.add(d:30m,to:r._time) else r._time,_value:if date.hour(t:r._time)==10 then 1.0 else 0.0,_field:\"Usual hot water\"})) |> group(columns:[\"_field\"]) |> sort(columns:[\"_time\"])"
+        }
+      ],
+      "description": "Favourable: all four predicted quarter-hours have at least 2 kW surplus before EV charging. Marginal: some do. Planning estimates, not guarantees. Unavailable means missing inputs or weather older than six hours."
+    },
+    {
+      "id": 31,
+      "title": "Favourable charging windows",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 16,
+        "h": 6
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "From"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Until"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Minimum surplus"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "kwatt"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\noption location = timezone.location(name:\"__HISTORY_TIMEZONE__\")\ndata=from(bucket:\"enphase\") |> range(start:v.timeRangeStart, stop:v.timeRangeStop)\n |> filter(fn:(r)=>r._measurement==\"enphase_prediction_hourly\" and r.model==\"weather_adjusted\" and (r.metric==\"Consumed\" and (r._field==\"green_charge_status\" or r._field==\"minimum_ev_surplus_kw\" or r._field==\"weather_issued_unix\" or r._field==\"ev_planning_available\")))\n |> keep(columns:[\"_time\",\"_field\",\"_value\"]) |> group() |> pivot(rowKey:[\"_time\"],columnKey:[\"_field\"],valueColumn:\"_value\")\n |> map(fn:(r)=>({r with status:if r.ev_planning_available<1.0 or float(v:uint(v:now()))/1000000000.0-r.weather_issued_unix>21600.0 then -1.0 else r.green_charge_status}))\n\ndata |> sort(columns:[\"_time\"]) |> stateTracking(fn:(r)=>r.status==2.0,countColumn:\"streak\") |> filter(fn:(r)=>r.status==2.0)\n |> map(fn:(r)=>({r with window_start:int(v:r._time)-(r.streak-1)*3600000000000})) |> group(columns:[\"window_start\"])\n |> reduce(identity:{start:0,stop:0,hours:0,minimum:9999.0},fn:(r,accumulator)=>({start:r.window_start,stop:int(v:r._time)+3600000000000,hours:accumulator.hours+1,minimum:if r.minimum_ev_surplus_kw<accumulator.minimum then r.minimum_ev_surplus_kw else accumulator.minimum}))\n |> map(fn:(r)=>({From:time(v:r.start),Until:time(v:r.stop),Hours:r.hours,\"Minimum surplus\":r.minimum})) |> group() |> sort(columns:[\"From\"])"
+        }
+      ],
+      "description": "Consecutive favourable hours are merged. Minimum surplus is the lowest estimated quarter-hour before EV charging. No rows can mean no favourable window was found or EV planning is unavailable; check the Charging opportunity timeline.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "From": 0,
+              "Until": 1,
+              "Hours": 2,
+              "Minimum surplus": 3
+            },
+            "excludeByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "title": "Reading this forecast",
+      "type": "text",
+      "gridPos": {
+        "x": 16,
+        "y": 27,
+        "w": 8,
+        "h": 6
+      },
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "pluginVersion": "11.6.1",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "noValue": "Unavailable",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**kWh** = energy over the day. **kW** = power; the charts show hourly averages.\n\n**Charging outlook** is shown when EV planning is enabled and supported by the available data. “Unavailable” means EV planning is disabled or required inputs are missing.\n\n**Solar ranges are provisional.** Forecast accuracy is being tracked as outcomes arrive."
+      }
+    },
+    {
+      "id": 36,
+      "title": "Forecast details",
+      "type": "row",
+      "collapsed": true,
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 24,
+        "h": 1
+      },
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                }
+              },
+              "decimals": 1,
+              "unit": "kwatth"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Produced"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "#EAB839"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Consumed"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "#5794F2"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Exported"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "#2EBFA5"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Imported"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "mode": "fixed",
+                      "fixedColor": "#B877D9"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 34,
+            "w": 24,
+            "h": 8
+          },
+          "id": 33,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "orientation": "auto",
+            "showValue": "never",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "xField": "Day",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "11.6.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "InfluxDB"
+              },
+              "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_prediction_daily\" and r.model == \"weather_adjusted\" and r._field == \"likely_kwh\")\n  |> keep(columns: [\"target_date\", \"metric\", \"_value\"])\n  |> group(columns: [\"target_date\"])\n  |> pivot(rowKey: [\"target_date\"], columnKey: [\"metric\"], valueColumn: \"_value\")\n  |> group()\n  |> rename(columns: {target_date: \"Day\"})\n  |> sort(columns: [\"Day\"])",
+              "refId": "A"
+            }
+          ],
+          "title": "Weather-Adjusted Daily Forecast",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 1,
+              "unit": "kwatth"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 42,
+            "w": 24,
+            "h": 8
+          },
+          "id": 34,
+          "options": {
+            "legend": {
+              "calcs": [
+                "sum"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "InfluxDB"
+              },
+              "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_prediction_hourly\" and r.metric == \"Produced\" and r._field == \"kwh\")\n  |> group(columns: [\"model\"])\n  |> map(fn: (r) => ({ r with _field: if r.model == \"weather_adjusted\" then \"Weather Adjusted\" else \"Historical\" }))",
+              "refId": "A"
+            }
+          ],
+          "title": "Solar Production: Historical vs Weather-Adjusted",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 80,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                }
+              },
+              "decimals": 1,
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 50,
+            "w": 24,
+            "h": 8
+          },
+          "id": 35,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "orientation": "auto",
+            "showValue": "never",
+            "stacking": "none",
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "xField": "Day",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "11.6.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "InfluxDB"
+              },
+              "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_prediction_weather\" and (r._field == \"production_multiplier\" or r._field == \"avg_daylight_cloud_cover_percent\" or r._field == \"avg_daylight_precipitation_probability_percent\"))\n  |> map(fn: (r) => ({ r with _value: if r._field == \"production_multiplier\" then r._value * 100.0 else r._value }))\n  |> map(fn: (r) => ({ r with _field: if r._field == \"production_multiplier\" then \"Production Multiplier\" else if r._field == \"avg_daylight_cloud_cover_percent\" then \"Cloud Cover\" else \"Rain Probability\" }))\n  |> keep(columns: [\"target_date\", \"_field\", \"_value\"])\n  |> group(columns: [\"target_date\"])\n  |> pivot(rowKey: [\"target_date\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> group()\n  |> rename(columns: {target_date: \"Day\"})\n  |> sort(columns: [\"Day\"])",
+              "refId": "A"
+            }
+          ],
+          "title": "Weather Adjustment Factors",
+          "type": "barchart"
+        }
+      ]
+    }
+  ],
+  "preload": false,
+  "refresh": "15m",
+  "schemaVersion": 40,
+  "tags": [
+    "enphase",
+    "prediction",
+    "weather"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now+1d/d",
+    "to": "now+4d/d"
+  },
+  "timepicker": {},
+  "timezone": "__HISTORY_TIMEZONE__",
+  "title": "Enphase 3-Day Forecast",
+  "uid": "enphase-3-day-forecast",
+  "version": 2,
+  "weekStart": ""
+}

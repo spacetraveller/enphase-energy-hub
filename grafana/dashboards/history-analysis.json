@@ -1,0 +1,1105 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 2,
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "legendFormat": "{{_field}}",
+          "query": "import \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nfrom(bucket: \"enphase\")\n  |> range(start: 2024-10-01T00:00:00Z, stop: 2026-05-01T00:00:00Z)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\" or r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0 }))\n  |> map(fn: (r) => ({ r with season: if date.month(t: r._time) == 12 or date.month(t: r._time) <= 2 then \"Summer\" else if date.month(t: r._time) >= 3 and date.month(t: r._time) <= 5 then \"Autumn\" else if date.month(t: r._time) >= 6 and date.month(t: r._time) <= 8 then \"Winter\" else \"Spring\" }))\n  |> filter(fn: (r) => r.season == \"Summer\")\n  |> group(columns: [\"_field\"])\n  |> mean()\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Produced\" else if r._field == \"energy_consumed_wh\" then \"Consumed\" else if r._field == \"exported_to_grid_wh\" then \"Exported\" else \"Imported\" }))\n  |> keep(columns: [\"_field\", \"_value\"])\n  |> pivot(rowKey: [], columnKey: [\"_field\"], valueColumn: \"_value\")",
+          "refId": "A"
+        }
+      ],
+      "title": "☀️ Summer Avg Daily",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 2,
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "legendFormat": "{{_field}}",
+          "query": "import \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nfrom(bucket: \"enphase\")\n  |> range(start: 2024-10-01T00:00:00Z, stop: 2026-05-01T00:00:00Z)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\" or r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0 }))\n  |> map(fn: (r) => ({ r with season: if date.month(t: r._time) == 12 or date.month(t: r._time) <= 2 then \"Summer\" else if date.month(t: r._time) >= 3 and date.month(t: r._time) <= 5 then \"Autumn\" else if date.month(t: r._time) >= 6 and date.month(t: r._time) <= 8 then \"Winter\" else \"Spring\" }))\n  |> filter(fn: (r) => r.season == \"Autumn\")\n  |> group(columns: [\"_field\"])\n  |> mean()\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Produced\" else if r._field == \"energy_consumed_wh\" then \"Consumed\" else if r._field == \"exported_to_grid_wh\" then \"Exported\" else \"Imported\" }))\n  |> keep(columns: [\"_field\", \"_value\"])\n  |> pivot(rowKey: [], columnKey: [\"_field\"], valueColumn: \"_value\")",
+          "refId": "A"
+        }
+      ],
+      "title": "🍂 Autumn Avg Daily",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 2,
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 7,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "legendFormat": "{{_field}}",
+          "query": "import \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nfrom(bucket: \"enphase\")\n  |> range(start: 2024-10-01T00:00:00Z, stop: 2026-05-01T00:00:00Z)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\" or r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0 }))\n  |> map(fn: (r) => ({ r with season: if date.month(t: r._time) == 12 or date.month(t: r._time) <= 2 then \"Summer\" else if date.month(t: r._time) >= 3 and date.month(t: r._time) <= 5 then \"Autumn\" else if date.month(t: r._time) >= 6 and date.month(t: r._time) <= 8 then \"Winter\" else \"Spring\" }))\n  |> filter(fn: (r) => r.season == \"Winter\")\n  |> group(columns: [\"_field\"])\n  |> mean()\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Produced\" else if r._field == \"energy_consumed_wh\" then \"Consumed\" else if r._field == \"exported_to_grid_wh\" then \"Exported\" else \"Imported\" }))\n  |> keep(columns: [\"_field\", \"_value\"])\n  |> pivot(rowKey: [], columnKey: [\"_field\"], valueColumn: \"_value\")",
+          "refId": "A"
+        }
+      ],
+      "title": "❄️ Winter Avg Daily",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 2,
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "legendFormat": "{{_field}}",
+          "query": "import \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nfrom(bucket: \"enphase\")\n  |> range(start: 2024-10-01T00:00:00Z, stop: 2026-05-01T00:00:00Z)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\" or r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0 }))\n  |> map(fn: (r) => ({ r with season: if date.month(t: r._time) == 12 or date.month(t: r._time) <= 2 then \"Summer\" else if date.month(t: r._time) >= 3 and date.month(t: r._time) <= 5 then \"Autumn\" else if date.month(t: r._time) >= 6 and date.month(t: r._time) <= 8 then \"Winter\" else \"Spring\" }))\n  |> filter(fn: (r) => r.season == \"Spring\")\n  |> group(columns: [\"_field\"])\n  |> mean()\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Produced\" else if r._field == \"energy_consumed_wh\" then \"Consumed\" else if r._field == \"exported_to_grid_wh\" then \"Exported\" else \"Imported\" }))\n  |> keep(columns: [\"_field\", \"_value\"])\n  |> pivot(rowKey: [], columnKey: [\"_field\"], valueColumn: \"_value\")",
+          "refId": "A"
+        }
+      ],
+      "title": "🌱 Spring Avg Daily",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 26
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "legendFormat": "{{_field}}",
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and r._field == \"imported_from_grid_wh\")\n  |> group(columns: [\"_field\"])\n  |> sum()\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0, _field: \"Imported From Grid\" }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Grid Import In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 26
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "legendFormat": "{{_field}}",
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and r._field == \"exported_to_grid_wh\")\n  |> group(columns: [\"_field\"])\n  |> sum()\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0, _field: \"Exported To Grid\" }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Grid Export In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 26
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "legendFormat": "{{_field}}",
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and r._field == \"energy_consumed_wh\")\n  |> group(columns: [\"_field\"])\n  |> sum()\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0, _field: \"Total Consumption\" }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Consumption In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "unit": "prefix:$"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 26
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "legendFormat": "{{_field}}",
+          "query": "rateAudPerKwh = float(v: \"__IMPORT_RATE_AUD_PER_KWH__\")\n\nfrom(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and r._field == \"imported_from_grid_wh\")\n  |> group(columns: [\"_field\"])\n  |> sum()\n  |> map(fn: (r) => ({ r with _value: (float(v: r._value) / 1000.0) * rateAudPerKwh, _field: \"Import Cost\" }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Import Cost In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "insertNulls": false,
+            "showPoints": "never",
+            "pointSize": 5,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "axisColorMode": "text",
+            "axisBorderShow": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisCenteredZero": false,
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "kwatth",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0 }))\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Produced\" else \"Consumed\" }))",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_ev_charger_telemetry\" and r._field == \"consumption_wh\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0, _field: \"EV Charging\" }))",
+          "refId": "B"
+        }
+      ],
+      "title": "Daily Production vs Consumption vs EV Charging",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "insertNulls": false,
+            "showPoints": "never",
+            "pointSize": 5,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "axisColorMode": "text",
+            "axisBorderShow": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisCenteredZero": false,
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "kwatth",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0 }))\n  |> map(fn: (r) => ({ r with _field: if r._field == \"exported_to_grid_wh\" then \"Exported\" else \"Imported\" }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Grid Export vs Import",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "insertNulls": false,
+            "showPoints": "never",
+            "pointSize": 5,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "axisColorMode": "text",
+            "axisBorderShow": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisCenteredZero": false,
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "watt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\"))\n  |> group(columns: [\"_field\"])\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) * 4.0 }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Production Rate\" else \"Consumption Rate\" }))",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_ev_charger_telemetry\" and r._field == \"consumption_wh\")\n  |> group(columns: [\"_field\"])\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) * 4.0, _field: \"EV Charging Rate\" }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)",
+          "refId": "B"
+        }
+      ],
+      "title": "15-Minute Production vs Consumption vs EV Charging Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "insertNulls": false,
+            "showPoints": "never",
+            "pointSize": 5,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "axisColorMode": "text",
+            "axisBorderShow": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisCenteredZero": false,
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "watt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) * 4.0 }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _field: if r._field == \"exported_to_grid_wh\" then \"Export Rate\" else \"Import Rate\" }))",
+          "refId": "A"
+        }
+      ],
+      "title": "15-Minute Grid Export vs Import Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "decimals": 2,
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 9,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "Month",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nfrom(bucket: \"enphase\")\n  |> range(start: 2024-10-01T00:00:00Z, stop: 2026-05-01T00:00:00Z)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\" or r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0, month_number: date.month(t: r._time) }))\n  |> map(fn: (r) => ({ r with Month: if r.month_number == 1 then \"Jan\" else if r.month_number == 2 then \"Feb\" else if r.month_number == 3 then \"Mar\" else if r.month_number == 4 then \"Apr\" else if r.month_number == 5 then \"May\" else if r.month_number == 6 then \"Jun\" else if r.month_number == 7 then \"Jul\" else if r.month_number == 8 then \"Aug\" else if r.month_number == 9 then \"Sep\" else if r.month_number == 10 then \"Oct\" else if r.month_number == 11 then \"Nov\" else \"Dec\" }))\n  |> group(columns: [\"month_number\", \"Month\", \"_field\"])\n  |> mean()\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Produced\" else if r._field == \"energy_consumed_wh\" then \"Consumed\" else if r._field == \"exported_to_grid_wh\" then \"Exported\" else \"Imported\" }))\n  |> keep(columns: [\"month_number\", \"Month\", \"_field\", \"_value\"])\n  |> group(columns: [\"month_number\", \"Month\"])\n  |> pivot(rowKey: [\"month_number\", \"Month\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> group()\n  |> sort(columns: [\"month_number\"])\n  |> drop(columns: [\"month_number\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Average Daily Metrics by Month",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "decimals": 2,
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 61
+      },
+      "id": 10,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "Day",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nfrom(bucket: \"enphase\")\n  |> range(start: 2024-10-01T00:00:00Z, stop: 2026-05-01T00:00:00Z)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\" or r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1d, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0, day_number: date.weekDay(t: r._time) }))\n  |> map(fn: (r) => ({ r with Day: if r.day_number == 0 then \"Sun\" else if r.day_number == 1 then \"Mon\" else if r.day_number == 2 then \"Tue\" else if r.day_number == 3 then \"Wed\" else if r.day_number == 4 then \"Thu\" else if r.day_number == 5 then \"Fri\" else \"Sat\" }))\n  |> group(columns: [\"day_number\", \"Day\", \"_field\"])\n  |> mean()\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Produced\" else if r._field == \"energy_consumed_wh\" then \"Consumed\" else if r._field == \"exported_to_grid_wh\" then \"Exported\" else \"Imported\" }))\n  |> keep(columns: [\"day_number\", \"Day\", \"_field\", \"_value\"])\n  |> group(columns: [\"day_number\", \"Day\"])\n  |> pivot(rowKey: [\"day_number\", \"Day\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> group()\n  |> sort(columns: [\"day_number\"])\n  |> drop(columns: [\"day_number\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Average Daily Metrics by Day of Week",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "decimals": 2,
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 71
+      },
+      "id": 11,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "Hour",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nfrom(bucket: \"enphase\")\n  |> range(start: 2024-10-01T00:00:00Z, stop: 2026-05-01T00:00:00Z)\n  |> filter(fn: (r) => r._measurement == \"enphase_history_15m\" and (r._field == \"energy_produced_wh\" or r._field == \"energy_consumed_wh\" or r._field == \"exported_to_grid_wh\" or r._field == \"imported_from_grid_wh\"))\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: 1h, fn: sum, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) / 1000.0, hour_number: date.hour(t: r._time) }))\n  |> map(fn: (r) => ({ r with Hour: if r.hour_number < 10 then \"0\" + string(v: r.hour_number) + \":00\" else string(v: r.hour_number) + \":00\" }))\n  |> group(columns: [\"hour_number\", \"Hour\", \"_field\"])\n  |> mean()\n  |> map(fn: (r) => ({ r with _field: if r._field == \"energy_produced_wh\" then \"Produced\" else if r._field == \"energy_consumed_wh\" then \"Consumed\" else if r._field == \"exported_to_grid_wh\" then \"Exported\" else \"Imported\" }))\n  |> keep(columns: [\"hour_number\", \"Hour\", \"_field\", \"_value\"])\n  |> group(columns: [\"hour_number\", \"Hour\"])\n  |> pivot(rowKey: [\"hour_number\", \"Hour\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> group()\n  |> sort(columns: [\"hour_number\"])\n  |> drop(columns: [\"hour_number\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Average Hourly Metrics by Hour of Day",
+      "type": "barchart"
+    }
+  ],
+  "preload": false,
+  "refresh": "1m",
+  "schemaVersion": 40,
+  "tags": [
+    "enphase",
+    "history",
+    "analysis"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "2024-10-03T00:00:00+10:00",
+    "to": "2026-05-01T00:00:00+10:00"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Enphase Historical Analysis",
+  "uid": "enphase-history-analysis",
+  "version": 1,
+  "weekStart": ""
+}

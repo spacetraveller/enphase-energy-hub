@@ -1,0 +1,6 @@
+record/**/exports/*.lp
+record/**/snapshots/*.json
+record/inbox/*.csv
+__pycache__/
+*.pyc
+.pytest_cache/

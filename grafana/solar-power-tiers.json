@@ -1,0 +1,40 @@
+{
+  "description": "Tiered labels for the Energy Flow dashboard's Solar Powers panel. Values are instantaneous production thresholds in watts.",
+  "sources": [
+    "https://www.energy.gov/energysaver/led-lighting",
+    "https://enphase.com/blog/homeowners/how-many-watts-do-common-home-appliances-use",
+    "https://www.ergon.com.au/__data/assets/pdf_file/0003/1299702/Appliance-Running-costs-Master-FY25-rates.pdf",
+    "https://www.rheem.com.au/rheem/products/Spare-Parts/KIT-ELEMENT-OFFSET-4800W-150/p/050318K",
+    "https://www.appliancesonline.com.au/ak/1/a/5/7/1a57bc00197e8e2766a55c5d166599686e26b71f_491400G8_Rheem_Specifications_Sheet.pdf",
+    "monitor/record/knowledge/household_load_signatures.json"
+  ],
+  "tiers": [
+    { "min_watts": 0, "label": "a sleeping inverter" },
+    { "min_watts": 5, "label": "1 x LED light" },
+    { "min_watts": 15, "label": "phone charging plus a light" },
+    { "min_watts": 20, "label": "Voyager 2 calling home" },
+    { "min_watts": 30, "label": "the Wi-Fi router" },
+    { "min_watts": 60, "label": "a ceiling fan" },
+    { "min_watts": 90, "label": "a laptop charger" },
+    { "min_watts": 120, "label": "a desktop monitor" },
+    { "min_watts": 150, "label": "a 50 inch LED TV" },
+    { "min_watts": 250, "label": "a big OLED TV" },
+    { "min_watts": 350, "label": "a modern fridge" },
+    { "min_watts": 500, "label": "the washing machine" },
+    { "min_watts": 750, "label": "the reverse-cycle AC cruising" },
+    { "min_watts": 1000, "label": "a microwave" },
+    { "min_watts": 1200, "label": "the dishwasher pump and wash cycle" },
+    { "min_watts": 1500, "label": "a space heater" },
+    { "min_watts": 1800, "label": "an induction cooktop" },
+    { "min_watts": 1980, "label": "the air fryer heat-up burst" },
+    { "min_watts": 2000, "label": "minimum green EV charging" },
+    { "min_watts": 2400, "label": "the kettle at full tilt" },
+    { "min_watts": 2700, "label": "the dishwasher heating phase" },
+    { "min_watts": 3000, "label": "a hard-working air conditioner" },
+    { "min_watts": 3600, "label": "the hot water system" },
+    { "min_watts": 4800, "label": "a large hot water element" },
+    { "min_watts": 5000, "label": "a clothes dryer" },
+    { "min_watts": 6000, "label": "a big electric dryer" },
+    { "min_watts": 8000, "label": "serious workshop tools" }
+  ]
+}

@@ -1,0 +1,2112 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 23,
+      "panels": [],
+      "title": "In Range Summary",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\ndata = from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_dlvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nfirst = data\n  |> first()\n  |> set(key: \"point\", value: \"first\")\n\nlast = data\n  |> last()\n  |> set(key: \"point\", value: \"last\")\n\nunion(tables: [first, last])\n  |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ r with _value: (float(v: r.last) - float(v: r.first)) / 1000.0, _field: \"Imported From Grid\" }))\n  |> keep(columns: [\"_field\", \"_value\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Grid Import In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\ndata = from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_rcvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nfirst = data\n  |> first()\n  |> set(key: \"point\", value: \"first\")\n\nlast = data\n  |> last()\n  |> set(key: \"point\", value: \"last\")\n\nunion(tables: [first, last])\n  |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ r with _value: (float(v: r.last) - float(v: r.first)) / 1000.0, _field: \"Exported To Grid\" }))\n  |> keep(columns: [\"_field\", \"_value\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Grid Export In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "unit": "kwatth"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 19,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nproduction = from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_PRODUCTION_EID__\" and r._field == \"act_energy_dlvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nimported = from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_dlvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nexported = from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_rcvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nmetricDelta = (tables=<-, name) => {\n  first = tables\n    |> first()\n    |> set(key: \"point\", value: \"first\")\n\n  last = tables\n    |> last()\n    |> set(key: \"point\", value: \"last\")\n\n  return union(tables: [first, last])\n    |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n    |> map(fn: (r) => ({ _field: name, _value: float(v: r.last) - float(v: r.first) }))\n}\n\nunion(tables: [\n  production |> metricDelta(name: \"production\"),\n  imported |> metricDelta(name: \"imported\"),\n  exported |> metricDelta(name: \"exported\")\n])\n  |> group()\n  |> pivot(rowKey: [], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _field: \"Total Consumption\", _value: (r.production + r.imported - r.exported) / 1000.0 }))\n  |> keep(columns: [\"_field\", \"_value\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Consumption In Range",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          },
+          "unit": "prefix:$"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nrateAudPerKwh = float(v: \"__IMPORT_RATE_AUD_PER_KWH__\")\n\ndata = from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_dlvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nfirst = data\n  |> first()\n  |> set(key: \"point\", value: \"first\")\n\nlast = data\n  |> last()\n  |> set(key: \"point\", value: \"last\")\n\nunion(tables: [first, last])\n  |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ r with _value: ((float(v: r.last) - float(v: r.first)) / 1000.0) * rateAudPerKwh, _field: \"Import Cost\" }))\n  |> keep(columns: [\"_field\", \"_value\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Import Cost In Range",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 24,
+      "panels": [],
+      "title": "Today & Live",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 0,
+        "y": 7
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\ndata = from(bucket: \"enphase\")\n  |> range(start: today())\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_PRODUCTION_EID__\" and r._field == \"act_energy_dlvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nfirst = data\n  |> first()\n  |> set(key: \"point\", value: \"first\")\n\nlast = data\n  |> last()\n  |> set(key: \"point\", value: \"last\")\n\nunion(tables: [first, last])\n  |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ r with _value: (float(v: r.last) - float(v: r.first)) / 1000.0 }))\n  |> keep(columns: [\"_field\", \"_value\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Solar Today",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 4,
+        "y": 7
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\nproduction = from(bucket: \"enphase\")\n  |> range(start: today())\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_PRODUCTION_EID__\" and r._field == \"act_energy_dlvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nimported = from(bucket: \"enphase\")\n  |> range(start: today())\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_dlvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nexported = from(bucket: \"enphase\")\n  |> range(start: today())\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_rcvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nmetricDelta = (tables=<-, name) => {\n  first = tables\n    |> first()\n    |> set(key: \"point\", value: \"first\")\n\n  last = tables\n    |> last()\n    |> set(key: \"point\", value: \"last\")\n\n  return union(tables: [first, last])\n    |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n    |> map(fn: (r) => ({ _field: name, _value: float(v: r.last) - float(v: r.first) }))\n}\n\nunion(tables: [\n  production |> metricDelta(name: \"production\"),\n  imported |> metricDelta(name: \"imported\"),\n  exported |> metricDelta(name: \"exported\")\n])\n  |> group()\n  |> pivot(rowKey: [], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _field: \"Total Consumption Today\", _value: (r.production + r.imported - r.exported) / 1000.0 }))\n  |> keep(columns: [\"_field\", \"_value\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Consumption Today",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 8,
+        "y": 7
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\ndata = from(bucket: \"enphase\")\n  |> range(start: today())\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_dlvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nfirst = data\n  |> first()\n  |> set(key: \"point\", value: \"first\")\n\nlast = data\n  |> last()\n  |> set(key: \"point\", value: \"last\")\n\nunion(tables: [first, last])\n  |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ r with _value: (float(v: r.last) - float(v: r.first)) / 1000.0 }))\n  |> keep(columns: [\"_field\", \"_value\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Grid Import Today",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 12,
+        "y": 7
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\ndata = from(bucket: \"enphase\")\n  |> range(start: today())\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and r._field == \"act_energy_rcvd\")\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nfirst = data\n  |> first()\n  |> set(key: \"point\", value: \"first\")\n\nlast = data\n  |> last()\n  |> set(key: \"point\", value: \"last\")\n\nunion(tables: [first, last])\n  |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ r with _value: (float(v: r.last) - float(v: r.first)) / 1000.0 }))\n  |> keep(columns: [\"_field\", \"_value\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Grid Export Today",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 16,
+        "y": 7
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "import \"timezone\"\n\noption location = timezone.location(name: \"UTC\")\n\ndata = from(bucket: \"enphase\")\n  |> range(start: today())\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r.eid == \"__METER_NET_EID__\" and (r._field == \"act_energy_dlvd\" or r._field == \"act_energy_rcvd\"))\n  |> keep(columns: [\"_time\", \"_value\", \"_field\"])\n  |> group(columns: [\"_field\"])\n\nfirst = data\n  |> first()\n  |> set(key: \"point\", value: \"first\")\n\nlast = data\n  |> last()\n  |> set(key: \"point\", value: \"last\")\n\nunion(tables: [first, last])\n  |> pivot(rowKey: [\"_field\"], columnKey: [\"point\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _field: \"net_grid_today\", _value: if r._field == \"act_energy_dlvd\" then (float(v: r.last) - float(v: r.first)) / 1000.0 else (float(v: r.first) - float(v: r.last)) / 1000.0 }))\n  |> group(columns: [\"_field\"])\n  |> sum()",
+          "refId": "A"
+        }
+      ],
+      "title": "Net Grid Today",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1.38
+              },
+              {
+                "color": "blue",
+                "value": 1.84
+              },
+              {
+                "color": "purple",
+                "value": 2.3
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 20,
+        "y": 7
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"consumption\" and r.measurement_type == \"net-consumption\" and r._field == \"w_now\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: if r._value < 0.0 then -r._value / 1000.0 else 0.0, _field: \"Green Charge Surplus\" }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Green Charge Surplus",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 4,
+        "x": 0,
+        "y": 14
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"production\" and r.measurement_type == \"production\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> last()",
+          "refId": "A"
+        }
+      ],
+      "title": "Solar Now",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 10,
+          "unit": "kwatt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "orange",
+                "value": 3
+              },
+              {
+                "color": "red",
+                "value": 6
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 4,
+        "y": 14
+      },
+      "id": 3,
+      "options": {
+        "operatorName": "lastNotNull",
+        "showTitle": false,
+        "showValue": true,
+        "showTickLabels": true,
+        "formatTickLabelsWithUnit": true,
+        "minValue": 0,
+        "maxValue": 10,
+        "wrapValues": false,
+        "animateNeedleValueTransition": true,
+        "animateNeedleValueTransitionSpeed": 250,
+        "allowNeedleCrossLimits": false,
+        "needleCrossLimitDegrees": 0,
+        "needleWidth": 5,
+        "markerEndEnabled": true,
+        "markerEndShape": "arrow",
+        "markerStartEnabled": false,
+        "markerStartShape": "circle",
+        "outerEdgeColor": "#334155",
+        "innerColor": "#111827",
+        "pivotColor": "#F8FAFC",
+        "needleColor": "#F2CC0C",
+        "unitsLabelColor": "#E5E7EB",
+        "tickLabelColor": "#E5E7EB",
+        "tickMajorColor": "#CBD5E1",
+        "tickMinorColor": "#64748B",
+        "gaugeRadius": 0,
+        "pivotRadius": 0.08,
+        "padding": 0.05,
+        "edgeWidth": 0.05,
+        "tickEdgeGap": 0.05,
+        "tickLengthMaj": 0.14,
+        "tickLengthMin": 0.06,
+        "ticknessGaugeBasis": 200,
+        "tickWidthMajor": 4,
+        "tickWidthMinor": 1,
+        "needleTickGap": 0.05,
+        "needleLengthNeg": 0.18,
+        "zeroTickAngle": 60,
+        "maxTickAngle": 300,
+        "zeroNeedleAngle": 40,
+        "maxNeedleAngle": 320,
+        "tickSpacingMajor": 2,
+        "tickSpacingMinor": 0.5,
+        "tickMapConfig": {
+          "tickMaps": [],
+          "enabled": true
+        },
+        "showThresholdBandOnGauge": true,
+        "showThresholdBandLowerRange": true,
+        "showThresholdBandMiddleRange": true,
+        "showThresholdBandUpperRange": true,
+        "showThresholdStateOnBackground": false,
+        "showThresholdStateOnValue": true,
+        "showThresholdStateOnTitle": false,
+        "valueYOffset": 0,
+        "valueFontSize": 18,
+        "titleYOffset": 0,
+        "titleFontSize": 16,
+        "tickLabelFontSize": 10
+      },
+      "pluginVersion": "2.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"consumption\" and r.measurement_type == \"total-consumption\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> last()\n  |> map(fn: (r) => ({ r with _field: \"Consumption kW\", _value: float(v: r._value) / 1000.0 }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Consumption Now",
+      "type": "briangann-gauge-panel"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": "-6",
+          "max": 10,
+          "unit": "kwatt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": -1.4
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "orange",
+                "value": 3
+              },
+              {
+                "color": "red",
+                "value": 6
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 9,
+        "y": 14
+      },
+      "id": 16,
+      "options": {
+        "operatorName": "lastNotNull",
+        "showTitle": false,
+        "showValue": true,
+        "showTickLabels": true,
+        "formatTickLabelsWithUnit": true,
+        "minValue": -6,
+        "maxValue": 10,
+        "wrapValues": false,
+        "animateNeedleValueTransition": true,
+        "animateNeedleValueTransitionSpeed": 250,
+        "allowNeedleCrossLimits": false,
+        "needleCrossLimitDegrees": 0,
+        "needleWidth": 5,
+        "markerEndEnabled": true,
+        "markerEndShape": "arrow",
+        "markerStartEnabled": false,
+        "markerStartShape": "circle",
+        "outerEdgeColor": "#334155",
+        "innerColor": "#111827",
+        "pivotColor": "#F8FAFC",
+        "needleColor": "#F2CC0C",
+        "unitsLabelColor": "#E5E7EB",
+        "tickLabelColor": "#E5E7EB",
+        "tickMajorColor": "#CBD5E1",
+        "tickMinorColor": "#64748B",
+        "gaugeRadius": 0,
+        "pivotRadius": 0.08,
+        "padding": 0.05,
+        "edgeWidth": 0.05,
+        "tickEdgeGap": 0.05,
+        "tickLengthMaj": 0.14,
+        "tickLengthMin": 0.06,
+        "ticknessGaugeBasis": 200,
+        "tickWidthMajor": 4,
+        "tickWidthMinor": 1,
+        "needleTickGap": 0.05,
+        "needleLengthNeg": 0.18,
+        "zeroTickAngle": 60,
+        "maxTickAngle": 300,
+        "zeroNeedleAngle": 40,
+        "maxNeedleAngle": 320,
+        "tickSpacingMajor": 2,
+        "tickSpacingMinor": 0.5,
+        "tickMapConfig": {
+          "tickMaps": [],
+          "enabled": true
+        },
+        "showThresholdBandOnGauge": true,
+        "showThresholdBandLowerRange": true,
+        "showThresholdBandMiddleRange": true,
+        "showThresholdBandUpperRange": true,
+        "showThresholdStateOnBackground": false,
+        "showThresholdStateOnValue": true,
+        "showThresholdStateOnTitle": false,
+        "valueYOffset": 0,
+        "valueFontSize": 18,
+        "titleYOffset": 0,
+        "titleFontSize": 16,
+        "tickLabelFontSize": 10
+      },
+      "pluginVersion": "2.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"consumption\" and r.measurement_type == \"net-consumption\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> last()\n  |> map(fn: (r) => ({ r with _field: \"Grid Flow kW\", _value: float(v: r._value) / 1000.0 }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Grid Flow Now",
+      "type": "briangann-gauge-panel"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 10,
+          "unit": "kwatt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "orange",
+                "value": 3
+              },
+              {
+                "color": "red",
+                "value": 6
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 14,
+        "y": 14
+      },
+      "id": 11,
+      "options": {
+        "operatorName": "lastNotNull",
+        "showTitle": false,
+        "showValue": true,
+        "showTickLabels": true,
+        "formatTickLabelsWithUnit": true,
+        "minValue": 0,
+        "maxValue": 10,
+        "wrapValues": false,
+        "animateNeedleValueTransition": true,
+        "animateNeedleValueTransitionSpeed": 250,
+        "allowNeedleCrossLimits": false,
+        "needleCrossLimitDegrees": 0,
+        "needleWidth": 5,
+        "markerEndEnabled": true,
+        "markerEndShape": "arrow",
+        "markerStartEnabled": false,
+        "markerStartShape": "circle",
+        "outerEdgeColor": "#334155",
+        "innerColor": "#111827",
+        "pivotColor": "#F8FAFC",
+        "needleColor": "#F2CC0C",
+        "unitsLabelColor": "#E5E7EB",
+        "tickLabelColor": "#E5E7EB",
+        "tickMajorColor": "#CBD5E1",
+        "tickMinorColor": "#64748B",
+        "gaugeRadius": 0,
+        "pivotRadius": 0.08,
+        "padding": 0.05,
+        "edgeWidth": 0.05,
+        "tickEdgeGap": 0.05,
+        "tickLengthMaj": 0.14,
+        "tickLengthMin": 0.06,
+        "ticknessGaugeBasis": 200,
+        "tickWidthMajor": 4,
+        "tickWidthMinor": 1,
+        "needleTickGap": 0.05,
+        "needleLengthNeg": 0.18,
+        "zeroTickAngle": 60,
+        "maxTickAngle": 300,
+        "zeroNeedleAngle": 40,
+        "maxNeedleAngle": 320,
+        "tickSpacingMajor": 2,
+        "tickSpacingMinor": 0.5,
+        "tickMapConfig": {
+          "tickMaps": [],
+          "enabled": true
+        },
+        "showThresholdBandOnGauge": true,
+        "showThresholdBandLowerRange": true,
+        "showThresholdBandMiddleRange": true,
+        "showThresholdBandUpperRange": true,
+        "showThresholdStateOnBackground": false,
+        "showThresholdStateOnValue": true,
+        "showThresholdStateOnTitle": false,
+        "valueYOffset": 0,
+        "valueFontSize": 18,
+        "titleYOffset": 0,
+        "titleFontSize": 16,
+        "tickLabelFontSize": 10
+      },
+      "pluginVersion": "2.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"consumption\" and r.measurement_type == \"net-consumption\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> last()\n  |> map(fn: (r) => ({ r with _field: \"Import kW\", _value: if r._value > 0.0 then float(v: r._value) / 1000.0 else 0.0 }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Import Now",
+      "type": "briangann-gauge-panel"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 6,
+          "unit": "kwatt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "blue",
+                "value": 2
+              },
+              {
+                "color": "yellow",
+                "value": 4
+              },
+              {
+                "color": "orange",
+                "value": 6
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 5,
+        "x": 19,
+        "y": 14
+      },
+      "id": 12,
+      "options": {
+        "operatorName": "lastNotNull",
+        "showTitle": false,
+        "showValue": true,
+        "showTickLabels": true,
+        "formatTickLabelsWithUnit": true,
+        "minValue": 0,
+        "maxValue": 6,
+        "wrapValues": false,
+        "animateNeedleValueTransition": true,
+        "animateNeedleValueTransitionSpeed": 250,
+        "allowNeedleCrossLimits": false,
+        "needleCrossLimitDegrees": 0,
+        "needleWidth": 5,
+        "markerEndEnabled": true,
+        "markerEndShape": "arrow",
+        "markerStartEnabled": false,
+        "markerStartShape": "circle",
+        "outerEdgeColor": "#334155",
+        "innerColor": "#111827",
+        "pivotColor": "#F8FAFC",
+        "needleColor": "#F2CC0C",
+        "unitsLabelColor": "#E5E7EB",
+        "tickLabelColor": "#E5E7EB",
+        "tickMajorColor": "#CBD5E1",
+        "tickMinorColor": "#64748B",
+        "gaugeRadius": 0,
+        "pivotRadius": 0.08,
+        "padding": 0.05,
+        "edgeWidth": 0.05,
+        "tickEdgeGap": 0.05,
+        "tickLengthMaj": 0.14,
+        "tickLengthMin": 0.06,
+        "ticknessGaugeBasis": 200,
+        "tickWidthMajor": 4,
+        "tickWidthMinor": 1,
+        "needleTickGap": 0.05,
+        "needleLengthNeg": 0.18,
+        "zeroTickAngle": 60,
+        "maxTickAngle": 300,
+        "zeroNeedleAngle": 40,
+        "maxNeedleAngle": 320,
+        "tickSpacingMajor": 1,
+        "tickSpacingMinor": 0.5,
+        "tickMapConfig": {
+          "tickMaps": [],
+          "enabled": true
+        },
+        "showThresholdBandOnGauge": true,
+        "showThresholdBandLowerRange": true,
+        "showThresholdBandMiddleRange": true,
+        "showThresholdBandUpperRange": true,
+        "showThresholdStateOnBackground": false,
+        "showThresholdStateOnValue": true,
+        "showThresholdStateOnTitle": false,
+        "valueYOffset": 0,
+        "valueFontSize": 18,
+        "titleYOffset": 0,
+        "titleFontSize": 16,
+        "tickLabelFontSize": 10
+      },
+      "pluginVersion": "2.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"consumption\" and r.measurement_type == \"net-consumption\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> last()\n  |> map(fn: (r) => ({ r with _field: \"Export kW\", _value: if r._value < 0.0 then float(v: r._value) / -1000.0 else 0.0 }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Export Now",
+      "type": "briangann-gauge-panel"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 25,
+      "panels": [],
+      "title": "Trends",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "insertNulls": false,
+            "showPoints": "never",
+            "pointSize": 5,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "axisColorMode": "text",
+            "axisBorderShow": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisCenteredZero": false,
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "unit": "watt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"production\" and r.measurement_type == \"production\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> set(key: \"_field\", value: \"Production\")",
+          "refId": "Production"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"consumption\" and r.measurement_type == \"total-consumption\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> set(key: \"_field\", value: \"Total Consumption\")",
+          "refId": "Total Consumption"
+        }
+      ],
+      "title": "Overall Production vs Total Consumption",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "barAlignment": 0,
+            "lineWidth": 1,
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "insertNulls": false,
+            "showPoints": "never",
+            "pointSize": 5,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "axisLabel": "",
+            "axisColorMode": "text",
+            "axisBorderShow": false,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisCenteredZero": true,
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "unit": "watt",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "rgba(125, 211, 252, 0.55)",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.6.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"consumption\" and r.measurement_type == \"net-consumption\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> set(key: \"_field\", value: \"Net Consumption\")",
+          "refId": "Net"
+        }
+      ],
+      "title": "Net Consumption",
+      "type": "timeseries"
+    },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "barAlignment": 0,
+                "lineWidth": 1,
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "spanNulls": false,
+                "insertNulls": false,
+                "showPoints": "never",
+                "pointSize": 5,
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                },
+                "axisPlacement": "auto",
+                "axisLabel": "",
+                "axisColorMode": "text",
+                "axisBorderShow": false,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "axisCenteredZero": false,
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "displayName": "${__field.labels.serial_number}",
+              "unit": "watt",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 24,
+            "x": 0,
+            "y": 39
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "InfluxDB"
+              },
+              "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_inverter_production\" and r._field == \"last_report_watts\")\n  |> group(columns: [\"serial_number\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)",
+              "refId": "A"
+            }
+          ],
+          "title": "Per-Inverter Production",
+          "type": "timeseries"
+        },
+    {
+      "collapsed": true,
+      "datasource": {
+        "type": "datasource",
+        "uid": "grafana"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 22,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "barAlignment": 0,
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "spanNulls": false,
+                "insertNulls": false,
+                "showPoints": "never",
+                "pointSize": 5,
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                },
+                "axisPlacement": "auto",
+                "axisLabel": "",
+                "axisColorMode": "text",
+                "axisBorderShow": false,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "axisCenteredZero": false,
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "unit": "watt",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 49
+          },
+          "id": 9,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "mean",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "InfluxDB"
+              },
+              "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"production\" and r.type == \"inverters\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> set(key: \"_field\", value: \"Aggregate Inverter Production\")",
+              "refId": "A"
+            }
+          ],
+          "title": "Aggregate Inverter Production",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "linear",
+                "barAlignment": 0,
+                "lineWidth": 1,
+                "fillOpacity": 5,
+                "gradientMode": "none",
+                "spanNulls": false,
+                "insertNulls": false,
+                "showPoints": "never",
+                "pointSize": 5,
+                "stacking": {
+                  "mode": "none",
+                  "group": "A"
+                },
+                "axisPlacement": "auto",
+                "axisLabel": "",
+                "axisColorMode": "text",
+                "axisBorderShow": false,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "axisCenteredZero": true,
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "unit": "watt",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 24,
+            "x": 0,
+            "y": 57
+          },
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [
+                "lastNotNull",
+                "mean"
+              ],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "InfluxDB"
+              },
+              "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r._field == \"active_power\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> set(key: \"_field\", value: \"Active Power\")",
+              "refId": "A"
+            }
+          ],
+          "title": "Meter Active Power",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "min": 200,
+              "max": 260,
+              "unit": "volt",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 216
+                  },
+                  {
+                    "color": "green",
+                    "value": 220
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 253
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 6,
+            "x": 0,
+            "y": 66
+          },
+          "id": 10,
+          "options": {
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": true,
+            "showThresholdMarkers": true,
+            "sizing": "auto",
+            "minVizWidth": 75,
+            "minVizHeight": 75
+          },
+          "pluginVersion": "11.6.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "InfluxDB"
+              },
+              "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_meter_reading\" and r._field == \"voltage\" and r._value > 0.0)\n  |> group(columns: [\"_field\"])\n  |> last()",
+              "refId": "A"
+            }
+          ],
+          "title": "Voltage",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "InfluxDB"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "from": 0.0,
+                    "result": {
+                      "text": "a sleeping inverter"
+                    },
+                    "to": 4.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 5.0,
+                    "result": {
+                      "text": "1 x LED light"
+                    },
+                    "to": 14.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 15.0,
+                    "result": {
+                      "text": "phone charging plus a light"
+                    },
+                    "to": 19.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 20.0,
+                    "result": {
+                      "text": "Voyager 2 calling home"
+                    },
+                    "to": 29.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 30.0,
+                    "result": {
+                      "text": "the Wi-Fi router"
+                    },
+                    "to": 59.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 60.0,
+                    "result": {
+                      "text": "a ceiling fan"
+                    },
+                    "to": 89.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 90.0,
+                    "result": {
+                      "text": "a laptop charger"
+                    },
+                    "to": 119.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 120.0,
+                    "result": {
+                      "text": "a desktop monitor"
+                    },
+                    "to": 149.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 150.0,
+                    "result": {
+                      "text": "a 50 inch LED TV"
+                    },
+                    "to": 249.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 250.0,
+                    "result": {
+                      "text": "a big OLED TV"
+                    },
+                    "to": 349.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 350.0,
+                    "result": {
+                      "text": "a modern fridge"
+                    },
+                    "to": 499.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 500.0,
+                    "result": {
+                      "text": "the washing machine"
+                    },
+                    "to": 749.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 750.0,
+                    "result": {
+                      "text": "the reverse-cycle AC cruising"
+                    },
+                    "to": 999.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 1000.0,
+                    "result": {
+                      "text": "a microwave"
+                    },
+                    "to": 1199.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 1200.0,
+                    "result": {
+                      "text": "the dishwasher pump and wash cycle"
+                    },
+                    "to": 1499.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 1500.0,
+                    "result": {
+                      "text": "a space heater"
+                    },
+                    "to": 1799.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 1800.0,
+                    "result": {
+                      "text": "an induction cooktop"
+                    },
+                    "to": 1979.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 1980.0,
+                    "result": {
+                      "text": "the air fryer heat-up burst"
+                    },
+                    "to": 1999.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 2000.0,
+                    "result": {
+                      "text": "minimum green EV charging"
+                    },
+                    "to": 2399.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 2400.0,
+                    "result": {
+                      "text": "the kettle at full tilt"
+                    },
+                    "to": 2699.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 2700.0,
+                    "result": {
+                      "text": "the dishwasher heating phase"
+                    },
+                    "to": 2999.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 3000.0,
+                    "result": {
+                      "text": "a hard-working air conditioner"
+                    },
+                    "to": 3599.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 3600.0,
+                    "result": {
+                      "text": "the hot water system"
+                    },
+                    "to": 4799.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 4800.0,
+                    "result": {
+                      "text": "a large hot water element"
+                    },
+                    "to": 4999.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 5000.0,
+                    "result": {
+                      "text": "a clothes dryer"
+                    },
+                    "to": 5999.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 6000.0,
+                    "result": {
+                      "text": "a big electric dryer"
+                    },
+                    "to": 7999.999
+                  },
+                  "type": "range"
+                },
+                {
+                  "options": {
+                    "from": 8000.0,
+                    "result": {
+                      "text": "serious workshop tools"
+                    },
+                    "to": 999999.0
+                  },
+                  "type": "range"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 6,
+            "x": 6,
+            "y": 66
+          },
+          "id": 26,
+          "options": {
+            "colorMode": "none",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "value",
+            "wideLayout": true
+          },
+          "pluginVersion": "11.6.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "InfluxDB"
+              },
+              "query": "from(bucket: \"enphase\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"enphase_energy_flow\" and r.section == \"production\" and r.measurement_type == \"production\" and r._field == \"w_now\")\n  |> group(columns: [\"_field\"])\n  |> last()\n  |> map(fn: (r) => ({ r with _field: \"Solar powers\", _value: float(v: r._value) }))",
+              "refId": "A"
+            }
+          ],
+          "title": "Solar Powers",
+          "type": "stat"
+        }
+      ],
+      "title": "Diagnostics & Low-Interest Meters",
+      "type": "row"
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 40,
+  "tags": [
+    "enphase",
+    "energy",
+    "production",
+    "consumption"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-12h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Enphase Live Energy Flow",
+  "uid": "enphase-energy-flow",
+  "version": 1,
+  "weekStart": ""
+}

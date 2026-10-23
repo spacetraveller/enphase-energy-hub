@@ -1,0 +1,140 @@
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: enphase-influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USERNAME:-admin}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD:-change-me-now}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG:-home}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET:-enphase}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN:-change-me-token}
+    healthcheck:
+      test: ["CMD", "influx", "ping", "--host", "http://localhost:8086"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  grafana:
+    image: grafana/grafana-oss:11.6.1
+    entrypoint: ["/bin/sh", "/etc/grafana/render-dashboards.sh"]
+    container_name: enphase-grafana
+    restart: unless-stopped
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./grafana/render-dashboards.sh:/etc/grafana/render-dashboards.sh:ro
+    environment:
+      IMPORT_RATE_AUD_PER_KWH: ${IMPORT_RATE_AUD_PER_KWH:-0}
+      FEED_IN_RATE_AUD_PER_KWH: ${FEED_IN_RATE_AUD_PER_KWH:-0}
+      METER_PRODUCTION_EID: ${METER_PRODUCTION_EID:-}
+      METER_NET_EID: ${METER_NET_EID:-}
+      HISTORY_TIMEZONE: ${HISTORY_TIMEZONE:-${WEATHER_TIMEZONE:-UTC}}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USERNAME:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: briangann-gauge-panel
+      INFLUXDB_ORG: ${INFLUXDB_ORG:-home}
+      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET:-enphase}
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-change-me-token}
+
+  monitor:
+    build:
+      context: ./monitor
+    container_name: enphase-monitor
+    restart: unless-stopped
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - ./monitor/record/info:/app/record/info
+      - ./monitor/record/__init__.py:/app/record/__init__.py:ro
+      - ./monitor/record/query_helpers.py:/app/record/query_helpers.py:ro
+      - ./monitor/record/endpoints:/app/record/endpoints
+      - ./monitor/record/network:/app/record/network
+      - ./monitor/record/cloud:/app/record/cloud
+      - ./monitor/record/cadence:/app/record/cadence
+      - ./monitor/record/debug:/app/record/debug
+      - ./monitor/record/knowledge:/app/record/knowledge:ro
+      - ./monitor/record/knowledge/local-solar-layout:/app/record/knowledge/local-solar-layout
+      - ./monitor/record/history:/app/record/history
+      - ./monitor/record/weather:/app/record/weather
+      - ./monitor/record/inbox:/app/record/inbox:ro
+    environment:
+      ENPHASE_HOST: ${ENPHASE_HOST}
+      ENPHASE_API_HOST: ${ENPHASE_API_HOST:-${ENPHASE_HOST}}
+      ENPHASE_API_SCHEME: ${ENPHASE_API_SCHEME:-https}
+      ENPHASE_REQUEST_HOST: ${ENPHASE_REQUEST_HOST:-}
+      ENPHASE_REACHABILITY_URL: ${ENPHASE_REACHABILITY_URL:-}
+      ENPHASE_REACHABILITY_PATH: ${ENPHASE_REACHABILITY_PATH:-}
+      ENPHASE_REACHABILITY_TARGET: ${ENPHASE_REACHABILITY_TARGET:-}
+      ENPHASE_SCHEME: ${ENPHASE_SCHEME:-http}
+      ENPHASE_PATH: ${ENPHASE_PATH:-/}
+      ENPHASE_INFO_SCHEME: ${ENPHASE_INFO_SCHEME:-http}
+      ENPHASE_INFO_PATH: ${ENPHASE_INFO_PATH:-/info}
+      ENPHASE_ACCESS_TOKEN: ${ENPHASE_ACCESS_TOKEN:-}
+      PROBE_INTERVAL_SECONDS: ${PROBE_INTERVAL_SECONDS:-30}
+      PRODUCTION_MONITORING_ENABLED: ${PRODUCTION_MONITORING_ENABLED:-true}
+      PRODUCTION_TOTALS_ENABLED: ${PRODUCTION_TOTALS_ENABLED:-true}
+      PRODUCTION_TOTALS_PATH: ${PRODUCTION_TOTALS_PATH:-/api/v1/production}
+      PRODUCTION_INVERTERS_ENABLED: ${PRODUCTION_INVERTERS_ENABLED:-true}
+      ENERGY_FLOW_ENABLED: ${ENERGY_FLOW_ENABLED:-true}
+      ENERGY_FLOW_PATH: ${ENERGY_FLOW_PATH:-/production.json}
+      METER_READINGS_ENABLED: ${METER_READINGS_ENABLED:-true}
+      METER_PRODUCTION_EID: ${METER_PRODUCTION_EID:-}
+      METER_NET_EID: ${METER_NET_EID:-}
+      PRODUCTION_INTERVAL_SECONDS: ${PRODUCTION_INTERVAL_SECONDS:-60}
+      PRODUCTION_TIMEOUT_SECONDS: ${PRODUCTION_TIMEOUT_SECONDS:-15}
+      PROBE_TIMEOUT_SECONDS: ${PROBE_TIMEOUT_SECONDS:-5}
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_ORG: ${INFLUXDB_ORG:-home}
+      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET:-enphase}
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-change-me-token}
+      IMPORT_RATE_AUD_PER_KWH: ${IMPORT_RATE_AUD_PER_KWH:-0}
+      FEED_IN_RATE_AUD_PER_KWH: ${FEED_IN_RATE_AUD_PER_KWH:-0}
+      WEATHER_LATITUDE: ${WEATHER_LATITUDE:-}
+      WEATHER_LONGITUDE: ${WEATHER_LONGITUDE:-}
+      WEATHER_TIMEZONE: ${WEATHER_TIMEZONE:-UTC}
+      HISTORY_TIMEZONE: ${HISTORY_TIMEZONE:-${WEATHER_TIMEZONE:-UTC}}
+      WEATHER_FORECAST_DAYS: ${WEATHER_FORECAST_DAYS:-4}
+      WEATHER_TIMEOUT_SECONDS: ${WEATHER_TIMEOUT_SECONDS:-15}
+      PREDICTION_FORECAST_DAYS: ${PREDICTION_FORECAST_DAYS:-3}
+      HOUSEHOLD_EV_ENABLED: ${HOUSEHOLD_EV_ENABLED:-false}
+      EV_CHARGER_TELEMETRY_ENABLED: ${EV_CHARGER_TELEMETRY_ENABLED:-false}
+      EV_TELEMETRY_LOOKBACK_DAYS: ${EV_TELEMETRY_LOOKBACK_DAYS:-180}
+      EV_CHARGER_TELEMETRY_START_DATE: ${EV_CHARGER_TELEMETRY_START_DATE:-}
+      HOUSEHOLD_EV_HISTORY_START_DATE: ${HOUSEHOLD_EV_HISTORY_START_DATE:-}
+      GREEN_CHARGE_SURPLUS_KW: ${GREEN_CHARGE_SURPLUS_KW:-2.0}
+      HOUSEHOLD_HOT_WATER_ESTIMATE_START: ${HOUSEHOLD_HOT_WATER_ESTIMATE_START:-}
+      HOUSEHOLD_HOT_WATER_ESTIMATE_END: ${HOUSEHOLD_HOT_WATER_ESTIMATE_END:-}
+      HOUSEHOLD_CALENDAR_PATH: ${HOUSEHOLD_CALENDAR_PATH:-}
+      ENPHASE_CLOUD_API_BASE: ${ENPHASE_CLOUD_API_BASE:-https://api.enphaseenergy.com/api/v4}
+      ENPHASE_CLOUD_OAUTH_BASE: ${ENPHASE_CLOUD_OAUTH_BASE:-https://api.enphaseenergy.com/oauth}
+      ENPHASE_CLOUD_AUTHORIZATION_URL: ${ENPHASE_CLOUD_AUTHORIZATION_URL:-}
+      ENPHASE_CLOUD_REDIRECT_URI: ${ENPHASE_CLOUD_REDIRECT_URI:-https://api.enphaseenergy.com/oauth/redirect_uri}
+      ENPHASE_CLOUD_CLIENT_ID: ${ENPHASE_CLOUD_CLIENT_ID:-}
+      ENPHASE_CLOUD_CLIENT_SECRET: ${ENPHASE_CLOUD_CLIENT_SECRET:-}
+      ENPHASE_CLOUD_API_KEY: ${ENPHASE_CLOUD_API_KEY:-}
+      ENPHASE_CLOUD_ACCESS_TOKEN: ${ENPHASE_CLOUD_ACCESS_TOKEN:-}
+      ENPHASE_CLOUD_REFRESH_TOKEN: ${ENPHASE_CLOUD_REFRESH_TOKEN:-}
+      ENPHASE_CLOUD_AUTH_CODE: ${ENPHASE_CLOUD_AUTH_CODE:-}
+      ENPHASE_CLOUD_SYSTEM_ID: ${ENPHASE_CLOUD_SYSTEM_ID:-}
+      ENPHASE_CLOUD_PROBE_DAY: ${ENPHASE_CLOUD_PROBE_DAY:-}
+      ENPHASE_CLOUD_EVSE_SERIALS: ${ENPHASE_CLOUD_EVSE_SERIALS:-}
+      ENPHASE_CLOUD_ENDPOINT_LIMIT: ${ENPHASE_CLOUD_ENDPOINT_LIMIT:-6}
+
+volumes:
+  influxdb-data:
+  influxdb-config:
+  grafana-data:

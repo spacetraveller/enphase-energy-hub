@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="440" viewBox="0 0 760 440" role="img" aria-labelledby="title description">
+  <title id="title">Synthetic panel to inverter map example</title>
+  <desc id="description">A fictional schematic with eight panels across two roof faces and invented inverter aliases.</desc>
+  <rect width="760" height="440" fill="#f6f8fb"/>
+  <text x="32" y="38" font-family="sans-serif" font-size="21" font-weight="700" fill="#172b4d">Synthetic example - not a real installation</text>
+  <text x="32" y="64" font-family="sans-serif" font-size="13" fill="#52647a">Schematic only. Position and association are fictional.</text>
+
+  <polygon points="75,150 365,92 365,350 75,350" fill="#e8eef6" stroke="#5c6f87" stroke-width="2"/>
+  <polygon points="395,92 685,150 685,350 395,350" fill="#e8eef6" stroke="#5c6f87" stroke-width="2"/>
+  <text x="92" y="126" font-family="sans-serif" font-size="16" font-weight="700" fill="#263b53">Face-A</text>
+  <text x="594" y="126" font-family="sans-serif" font-size="16" font-weight="700" fill="#263b53">Face-B</text>
+
+  <g font-family="sans-serif" text-anchor="middle">
+    <g fill="#cce9f3" stroke="#26758e" stroke-width="2">
+      <rect x="112" y="166" width="92" height="64" rx="4"/><rect x="226" y="166" width="92" height="64" rx="4"/>
+      <rect x="112" y="252" width="92" height="64" rx="4"/><rect x="226" y="252" width="92" height="64" rx="4"/>
+      <rect x="442" y="166" width="92" height="64" rx="4"/><rect x="556" y="166" width="92" height="64" rx="4"/>
+      <rect x="442" y="252" width="92" height="64" rx="4"/><rect x="556" y="252" width="92" height="64" rx="4"/>
+    </g>
+    <g font-size="14" font-weight="700" fill="#15394b">
+      <text x="158" y="192">P01</text><text x="158" y="213" font-size="11" font-weight="400">INV-A / CH-1</text>
+      <text x="272" y="192">P02</text><text x="272" y="213" font-size="11" font-weight="400">INV-A / CH-2</text>
+      <text x="158" y="278">P03</text><text x="158" y="299" font-size="11" font-weight="400">INV-B / CH-1</text>
+      <text x="272" y="278">P04</text><text x="272" y="299" font-size="11" font-weight="400">INV-B / CH-2</text>
+      <text x="488" y="192">P05</text><text x="488" y="213" font-size="11" font-weight="400">INV-C / CH-1</text>
+      <text x="602" y="192">P06</text><text x="602" y="213" font-size="11" font-weight="400">INV-C / CH-2</text>
+      <text x="488" y="278">P07</text><text x="488" y="299" font-size="11" font-weight="400">INV-D / CH-1</text>
+      <text x="602" y="278">P08</text><text x="602" y="299" font-size="11" font-weight="400">INV-D / CH-2</text>
+    </g>
+  </g>
+  <text x="32" y="398" font-family="sans-serif" font-size="12" fill="#52647a">All labels and associations above are invented placeholders.</text>
+</svg>
