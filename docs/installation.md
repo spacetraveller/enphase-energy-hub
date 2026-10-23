@@ -50,6 +50,20 @@ Open [http://localhost:3000](http://localhost:3000) on the host computer and sig
 
 Grafana and InfluxDB usernames, passwords, and the InfluxDB token initialize accounts and access when their persistent data volumes are first created. Changing `.env` later does not reset credentials in an existing volume. Use each service's credential management to rotate them, or intentionally recreate its data volume only after understanding that this deletes stored data. Grafana's password can be changed in its user settings.
 
+## Identify your inverters
+
+Once the local Gateway token and host are configured, run the one-time discovery command from the project folder:
+
+```powershell
+docker compose run --rm --no-deps monitor python record/info/discover_inverters.py
+```
+
+It reads the Gateway's inverter production endpoint, reports the number found, and saves serial numbers with local aliases such as `INV-01` in the ignored `monitor/record/knowledge/local-solar-layout/inverters.json` file. Open that file locally to compare serials with the Enphase app or installer records and edit aliases if helpful. Re-running discovery keeps your aliases and marks previously known inverters that are absent from the latest response as `present: false`. Do not paste the file into a chat or share it in Git.
+
+If you are using an AI agent, ask it to run this command, report the count, and help resolve any authentication or connectivity error. It should inspect the private file locally when needed, without printing serials in its response. If the endpoint reports zero inverters, check the app or installer records and the Gateway connection; aggregate monitoring can still run. Per-inverter charts populate automatically when the monitor receives inverter readings, without a fixed serial list in the dashboard. The current per-inverter chart displays serials in its legend, so review or redact that legend before sharing screenshots.
+
+Panel locations are optional. After identification, an AI agent should offer to help you record panel positions, which roof face each panel belongs to, its direction and inclination, and optionally a roof screenshot. You can skip this and finish setup. The [solar layout guide](solar-layout-mapping.md) explains how to keep these details in ignored local files. The current forecasting code uses weather and observed production history; it does not yet apply individual panel positions or inclinations.
+
 ## Optional Enphase cloud API
 
 The local Gateway connection above is the normal live-monitoring path. Cloud API v4 credentials are separate and only needed for cloud-backed tools such as selected history or telemetry imports. API plans, endpoints, access scopes, quotas, and prices can change; check Enphase's [Developer Portal](https://developer-v4.enphase.com/), [API quick start and OAuth guide](https://developer-v4.enphase.com/docs/quickstart.html), [API documentation](https://developer-v4.enphase.com/docs/monitoring_api), and [current plans](https://developer-v4.enphase.com/developer-plans) before signing up.
@@ -78,7 +92,7 @@ Start with the generic defaults in `.env.example`; configure only features that 
 - **EV planning:** set `HOUSEHOLD_EV_ENABLED=true` only if an EV is part of the site's demand profile. Set `HOUSEHOLD_EV_HISTORY_START_DATE` if the start date is known. Keep `EV_CHARGER_TELEMETRY_ENABLED=false` unless compatible charger telemetry is available in InfluxDB. Without adequate telemetry, the ordinary household forecast can still run while EV planning may be unavailable.
 - **Hot-water load estimate:** set both `HOUSEHOLD_HOT_WATER_ESTIMATE_START` and `HOUSEHOLD_HOT_WATER_ESTIMATE_END` to the local scheduled window. Leave both blank when unknown; this is a descriptive estimate, not a control schedule.
 - **Historical data:** use documented import tools under `monitor/record/history/` or `monitor/record/cloud/`. Imported household data is private and must stay out of shared branches.
-- **Solar panel map:** follow the [solar layout mapping guide](solar-layout-mapping.md). Store a real roof image/screenshot and panel map only in the ignored local layout directory. Use aliases in shareable reports and sanitize image metadata before sharing.
+- **Solar panel map:** optional after inverter identification. Follow the [solar layout mapping guide](solar-layout-mapping.md). Store a real roof image/screenshot and panel map only in the ignored local layout directory. Use aliases in shareable reports and sanitize image metadata before sharing.
 
 Set `METER_PRODUCTION_EID` and `METER_NET_EID` in the private root `.env` to
 enable Grafana's production, import, and export meter panels. Use the meter

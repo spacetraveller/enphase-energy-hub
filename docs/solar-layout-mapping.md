@@ -1,8 +1,10 @@
 # Map solar panels to inverters
 
-This guide describes a local way to make a roof layout that links each panel
-position to the inverter and channel reported by your system. A small command
-line tool validates the map and renders an SVG; it does not include an
+This optional guide describes a local way to make a roof layout that links each
+panel position to the inverter and channel reported by your system. Inverter
+identification is covered separately in the [installation guide](installation.md#identify-your-inverters).
+You can finish setup without knowing panel positions. A small command line tool
+validates the optional map and renders an SVG; it does not include an
 interactive visual editor or dashboard. The example below is synthetic; do not
 treat it as a real installation.
 
@@ -54,6 +56,31 @@ Use the system's own mapping or commissioning records to verify the association.
 Do not infer an inverter association from physical proximity alone. If the
 hardware does not expose a channel or a panel-to-inverter relationship is
 unknown, leave it blank and mark the mapping as unverified.
+
+You may also keep an optional `array-geometry.json` file in this ignored directory,
+even if you do not make a panel-position map. Record each roof face's compass
+direction (azimuth), inclination/tilt in degrees, and approximate panel count or
+capacity if known. Use `null` for unknown values. Azimuth uses degrees clockwise
+from north: east is 90, south is 180, and west is 270. For example:
+
+```json
+{
+  "version": 1,
+  "arrays": [
+    {
+      "alias": "Face-A",
+      "azimuth_degrees": 270,
+      "tilt_degrees": 30,
+      "panel_count": null,
+      "capacity_watts": null
+    }
+  ]
+}
+```
+
+This file is a private record for later customization. The current forecast does
+not read it or use per-panel positions or tilt. Record unknown values as unknown
+rather than guessing them.
 
 ## Local data shape and commands
 

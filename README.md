@@ -23,7 +23,8 @@ If you use an AI coding agent, this is usually the easiest route:
 1. Download the project as a ZIP and unzip it into a folder on the computer that will run it.
 2. Open that folder in an agent such as Codex, Claude Code, or Gemini (for example, Antigravity).
 3. Ask the agent to read `README.md`, `AGENTS.md`, and `docs/installation.md`, then guide you through installing and configuring the project for your Enphase system. Ask it to explain each step and keep credentials in `.env` rather than in chat or tracked files.
-4. Follow the agent's prompts, provide configuration details locally, and ask it to start the stack and help you confirm that the dashboards are receiving data.
+4. Ask the agent to identify the inverters reported by your Gateway using the private discovery command in the installation guide. It should confirm the count with you and help assign private aliases, without copying serials into chat or tracked files. Panel positions are optional; the agent should offer to help record panel locations, roof directions, and inclinations if you want a map or future geometry-aware analysis.
+5. Follow the agent's prompts, provide configuration details locally, and ask it to start the stack and help you confirm that the dashboards are receiving data.
 
 An agent can also help tailor the project once it is running. For example, you could ask it to:
 
@@ -56,7 +57,7 @@ If you prefer to configure it yourself:
    docker compose logs --tail 100 monitor
    ```
 
-7. Follow [the installation guide](docs/installation.md) for detailed instructions on finding an Enphase token and configuring optional features. Start with EV support disabled if you do not have an EV. Charger telemetry, hot-water estimates, and a household calendar are also optional.
+7. Run the [private inverter identification step](docs/installation.md#identify-your-inverters) and review the count and aliases locally. Panel locations are optional. Follow the installation guide for optional features; start with EV support disabled if you do not have an EV. Charger telemetry, hot-water estimates, and a household calendar are also optional.
 
 The project does not require Enphase cloud credentials for the basic local Gateway monitoring path. Cloud API credentials are only needed for features that explicitly use Enphase cloud data, such as some EV charger telemetry workflows. Do not put secrets into a public repository or paste them into a chat.
 
@@ -89,7 +90,7 @@ Use `.env.example` as the starting template and keep your private `.env` file lo
 
 Homes without an EV can leave EV support disabled. The forecast still uses ordinary household demand, and EV recommendations remain unavailable unless enabled and supported by sufficient data. See [forecast methods and limitations](monitor/record/history/FORECASTING.md) for more detail.
 
-To map panels to inverters, optionally create a private solar layout using the [solar layout guide](docs/solar-layout-mapping.md). The guide supports a local roof image or screenshot as an overlay. Keep the map and image in the ignored local folder; do not commit installation-specific screenshots, coordinates, serial numbers, or site information.
+Inverter identification is part of setup, but identifying each panel's physical position is optional. If you want a panel map, use the [solar layout guide](docs/solar-layout-mapping.md); it supports a local roof image or screenshot. You may also record roof direction and panel inclination privately for future calculations. Current forecasts do not use individual panel positions or inclinations. Keep maps and images in the ignored local folder; do not commit installation-specific screenshots, coordinates, serial numbers, or site information.
 
 ## Sharing and feedback
 
